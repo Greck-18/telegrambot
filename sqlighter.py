@@ -9,6 +9,13 @@ class SQLighter:
         self.connection = sqlite3.connect(database)
         self.cursor = self.connection.cursor()
 
+    def create_db(self):
+        # создание базы данных
+        if self.connection:
+            query = "CREATE TABLE IF NOT EXISTS subscribers(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,\
+            user_id TEXT NOT NULL,status BOOLEAN NOT NULL )"
+            return self.cursor.execute(query)
+
     def add_subscriber(self, user_id, status=True):
         with self.connection:
             return self.cursor.execute("INSERT INTO subscribers(user_id,status) VALUES(?,?)", (user_id, status))
@@ -27,6 +34,11 @@ class SQLighter:
         with self.connection:
             result = self.cursor.execute("SELECT * FROM subscribers WHERE user_id=?", (user_id,)).fetchall()
             return bool(len(result))
+
+    def check_status(self, user_id):
+        with self.connection:
+            result = self.cursor.execute("SELECT status FROM subscribers WHERE user_id=?", (user_id,)).fetchall()
+            return int(result[0][0])
 
     def close(self):
         # дисконект с базой данных
