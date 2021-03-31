@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=TOKEN)
 
 dp = Dispatcher(bot)
-db = SQLighter('D:\\python\\sample\\db\\database')
+db = SQLighter('database.bd')
 
 db.create_db()
 
