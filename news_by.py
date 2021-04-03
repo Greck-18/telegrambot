@@ -53,10 +53,10 @@ def page_of_news(count):
     text = None
     news = parse()
     while True:
-        title = code("Заголовок:") + "\n" + news[count - 1]['title'] + '\n'
-        test = "Текст:\n" + news[count - 1]['text'] + '\n'
-        time = "Время публикации: \n" + news[count - 1]['time'] + '\n'
-        url = "Ссылка: \n" + news[count - 1]['url'] + '\n'
+        title = "<b>Заголовок:</b>" + "\n" + news[count - 1]['title'] + '\n'
+        test = "<b>Текст:</b>\n" + news[count - 1]['text'] + '\n'
+        time = "<b>Время публикации:</b> \n" + news[count - 1]['time'] + '\n'
+        url = "<b>Ссылка:</b> \n" + news[count - 1]['url'] + '\n'
         text = title + test + time + url
         break
     return text
