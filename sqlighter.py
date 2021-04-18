@@ -16,30 +16,36 @@ class SQLighter:
             user_id TEXT NOT NULL,status BOOLEAN NOT NULL )"
             return self.cursor.execute(query)
 
+    # добавление в базу данных
     def add_subscriber(self, user_id, status=True):
         with self.connection:
             return self.cursor.execute("INSERT INTO subscribers(user_id,status) VALUES(?,?)", (user_id, status))
 
+    # обновление в базе данных
     def update_subscriber(self, user_id, status):
         with self.connection:
             return self.cursor.execute("UPDATE subscribers SET status=? WHERE user_id=?", (status, user_id))
 
+    # получение подписчиков
     def get_subscriptions(self, status=True):
         # выборка всех пользователей из бд , кто подписан
         with self.connection:
             return self.cursor.execute("SELECT * FROM subscribers WHERE status=?", (status,)).fetchall()
 
+    # проверка на подписку
     def subscribers_exists(self, user_id):
         # проверка на подписку
         with self.connection:
             result = self.cursor.execute("SELECT * FROM subscribers WHERE user_id=?", (user_id,)).fetchall()
             return bool(len(result))
 
+    # проверка статуса
     def check_status(self, user_id):
         with self.connection:
             result = self.cursor.execute("SELECT status FROM subscribers WHERE user_id=?", (user_id,)).fetchall()
             return int(result[0][0])
 
+    # завершение работы с бд
     def close(self):
         # дисконект с базой данных
         self.connection.close()

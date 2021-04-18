@@ -9,8 +9,8 @@ API = "e1f39c775547e71adb46a1b632b9dd24"
 owm = OWM(API, config)
 
 
+# погода
 class Weather:
-
     def __init__(self, city):
         self.city = city
         self.mgr = owm.weather_manager()
@@ -24,6 +24,7 @@ class Weather:
     # self.forecast = self.mgr.forecast_at_place(self.city, 'daily')
     # self.answer = self.forecast.will_be_clear_at(timestamps.tomorrow())
 
+    # получение погоды
     def get_weather(self):
         prompt = None
         if self.city == 'Бордо':

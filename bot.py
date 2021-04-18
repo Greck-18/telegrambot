@@ -8,24 +8,22 @@ from aiogram import Bot, Dispatcher, types, executor
 from aiogram.types.message import ContentType
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text, Command
-from sqlighter import SQLighter
-from aiogram.types import ParseMode
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton, \
-    ReplyKeyboardRemove
+    ReplyKeyboardRemove, ParseMode
+from news import NewsBy
+from sqlighter import SQLighter
 from states import Test
 from weather import Weather
-from datetime import datetime
-from news import News
-
 
 logging.basicConfig(level=logging.INFO)
 
 # инициализация бота
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
-obj = News("https://news.tut.by/daynews/")
-obj.get_info()
+news_by = NewsBy()
+news_by.get_data()
+news_by.process_data()
 # создание бд
 db = SQLighter('database.bd')
 db.create_db()
@@ -41,7 +39,6 @@ news_keyboard = InlineKeyboardMarkup().add(news_btn1, news_btn2, news_btn3, news
 
 
 # колбек функции кнопок с последующим выводом на экран текста
-
 @dp.callback_query_handler(lambda x: x.data and x.data.startswith('btn'))
 async def news_process(callback_query: types.CallbackQuery, state=None):
     num = callback_query.data[-1]
@@ -49,17 +46,17 @@ async def news_process(callback_query: types.CallbackQuery, state=None):
         num = int(num)
     count = num
     if num == 1:
-        await bot.send_message(callback_query.from_user.id, obj.news_page(count), parse_mode="html")
+        await bot.send_message(callback_query.from_user.id, news_by.get_news(count), parse_mode="html")
     elif num == 2:
-        await bot.send_message(callback_query.from_user.id, obj.news_page(count), parse_mode="html")
+        await bot.send_message(callback_query.from_user.id, news_by.get_news(count), parse_mode="html")
     elif num == 3:
-        await bot.send_message(callback_query.from_user.id, obj.news_page(count), parse_mode="html")
+        await bot.send_message(callback_query.from_user.id, news_by.get_news(count), parse_mode="html")
     elif num == 4:
-        await bot.send_message(callback_query.from_user.id, obj.news_page(count), parse_mode="html")
+        await bot.send_message(callback_query.from_user.id, news_by.get_news(count), parse_mode="html")
     elif num == 5:
-        await bot.send_message(callback_query.from_user.id, obj.news_page(count), parse_mode="html")
+        await bot.send_message(callback_query.from_user.id, news_by.get_news(count), parse_mode="html")
     elif num == 6:
-        await bot.send_message(callback_query.from_user.id, obj.news_page(count), parse_mode="html")
+        await bot.send_message(callback_query.from_user.id, news_by.get_news(count), parse_mode="html")
     await asyncio.sleep(2)
     repeat_btn = KeyboardButton("Да", callback_data="Yes")
     repeat_btn2 = KeyboardButton('Нет', callback_data="No")
@@ -67,17 +64,15 @@ async def news_process(callback_query: types.CallbackQuery, state=None):
     await bot.send_message(callback_query.from_user.id, "Хотите ещё почитать новости?", reply_markup=repeat_keyboard)
     await Test.Q2.set()
 
-    # функция страрт
 
-
+# функция страрт
 @dp.message_handler(commands=['start'])
 async def bot_start(message: types.Message):
     text = 'Приветствую тебя ,\nодпишись на меня если ещё не подписан , для этого пропиши команду /subscribe'
     await bot.send_message(message.from_user.id, text)
 
-    # меню бота
 
-
+# меню бота
 @dp.message_handler(commands=['help'])
 async def bot_help(message: types.Message):
     await bot.send_message(message.chat.id, f"Помощь, твой id {message.from_user.id}")
@@ -109,6 +104,7 @@ async def unsubscribe(message: types.Message):
         await message.answer("Вы успешно <b>отписались</b>!", parse_mode='html')
 
 
+# получение города для погоды
 @dp.message_handler(Command("weather"), state=None)
 async def give_weather(message: types.Message):
     await message.answer("Введите город в котром хотитите узнать погоду: ")
@@ -116,6 +112,7 @@ async def give_weather(message: types.Message):
     await Test.Q1.set()
 
 
+# машина состояний для белорусских новостей
 @dp.message_handler(state=Test.Q1)
 async def answer_weather(message: types.Message, state: FSMContext):
     answer = message.text
@@ -129,14 +126,14 @@ async def answer_weather(message: types.Message, state: FSMContext):
 
 # функция вывода новостей (белорусских)
 @dp.message_handler(commands=["news"], state=None)
-async def news_by(message: types.Message):
-    # await message.answer(news_title())
-    await message.answer(obj.news_title())
+async def bel_news(message: types.Message):
+    await message.answer(news_by.get_title())
     await asyncio.sleep(2)
     await message.answer("Какую <strong>новость</strong> хотите прочитать подробнее?", reply_markup=news_keyboard,
                          parse_mode='html')
 
 
+# машина состояния для погоды
 @dp.message_handler(state=Test.Q2)
 async def answer_weather(message: types.Message, state: FSMContext):
     answer1 = message.text
@@ -144,7 +141,7 @@ async def answer_weather(message: types.Message, state: FSMContext):
     data = await state.get_data()
     repeat = data.get("answer2")
     if repeat.lower() in "да":
-        await news_by(message)
+        await bel_news(message)
     elif repeat.lower() in 'нет':
         await bot_help(message)
     else:
@@ -159,6 +156,7 @@ async def unknown_message(message: types.Message):
     await message.reply(text, parse_mode=ParseMode.MARKDOWN)
 
 
+# функция , отправляющая админу приветствующее сообщение
 async def clock_for_admin():
     text = "Доброе утро ,<strong> мой господин</strong> . Желаю вам хорошего дня!"
     await bot.send_message(800847160, text, parse_mode='html')
@@ -168,6 +166,7 @@ async def clock_for_admin():
     await bot.send_message(800847160, text + weather.get_weather(), parse_mode='html')
 
 
+# дополнение к приветсвию админа
 async def scheduled():
     aioschedule.every().day.at("09:30").do(clock_for_admin)
     while True:
@@ -175,6 +174,7 @@ async def scheduled():
         await asyncio.sleep(1)
 
 
+# дополнение к приветствию админа
 async def on_startup(x):
     asyncio.create_task(scheduled())
 
