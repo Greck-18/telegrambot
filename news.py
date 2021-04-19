@@ -101,32 +101,32 @@ class FootBallNews(NewsParser):
             game = self.soup.find_all("td", class_="table_team-played js-played")  # .get_text(strip=True)
             point = self.soup.find_all("td", class_="table_team-points js-points")
             # .get_text(strip=True)
-
+            test_team = []
+            test_game = []
+            test_point = []
             for i in range(len(team)):
-                lis = [team[i]['title'] for j in range(5)]
-                self.team.append(lis)
-                lis1 = [game[j].get_text() for j in range(5)]
-                self.game.append(lis1)
-                lis2 = [point[i].get_text() for j in range(5)]
-                self.point.append(lis2)
+                if i % 5 == 0 or i == 59:
+                    self.team.append(test_team)
+                    self.game.append(test_game)
+                    self.point.append(test_point)
+                    if i != 0:
+                        test_point = []
+                        test_game = []
+                        test_team = []
+                test_team.append(team[i]['title'])
+                test_game.append(game[i].get_text())
+                test_point.append(point[i].get_text())
+            self.team[len(self.team) - 1].append(team[59]['title'])
+            self.game[len(self.team) - 1].append(game[59].get_text())
+            self.point[len(self.team) - 1].append(point[59].get_text())
 
         except AttributeError:
             raise AttributeError("Call method get_data()")
 
     def get_news(self, count):
-        self.table.set_style(BeautifulTable.STYLE_RST)
+        self.table.set_style(BeautifulTable.STYLE_DOTTED)
         self.table.columns.header = ['team', 'game', 'point']
         self.table.rows.header = ['1', '2', '3', '4', '5']
         for i in range(5):
-            self.table.rows[i] = [self.team[i][count], self.game[i][count], self.point[i][count]]
-
-        print(self.table)
-        print(self.team)
-        print(self.game)
-
-
-
-foot = FootBallNews()
-foot.get_data()
-foot.process_data()
-foot.get_news(3)
+            self.table.rows[i] = [self.team[count][i], self.game[count][i], self.point[count][i]]
+        return self.table

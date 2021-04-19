@@ -11,7 +11,7 @@ from aiogram.dispatcher.filters import Text, Command
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton, \
     ReplyKeyboardRemove, ParseMode
-from news import NewsBy
+from news import NewsBy, FootBallNews
 from sqlighter import SQLighter
 from states import Test
 from weather import Weather
@@ -19,9 +19,12 @@ from weather import Weather
 logging.basicConfig(level=logging.INFO)
 
 # инициализация бота
+news_by = NewsBy()
+football_news = FootBallNews()
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
-news_by = NewsBy()
+football_news.get_data()
+football_news.process_data()
 news_by.get_data()
 news_by.process_data()
 # создание бд
@@ -36,6 +39,23 @@ news_btn4 = InlineKeyboardButton('4', callback_data='btn4')
 news_btn5 = InlineKeyboardButton('5', callback_data='btn5')
 news_btn6 = InlineKeyboardButton('6', callback_data='btn6')
 news_keyboard = InlineKeyboardMarkup().add(news_btn1, news_btn2, news_btn3, news_btn4, news_btn5, news_btn6)
+
+# кнопки для новостей про футбол
+sport_btn1 = InlineKeyboardButton('🇫🇷', callback_data='sport1')
+sport_btn2 = InlineKeyboardButton('🇩🇪', callback_data='sport2')
+sport_btn3 = InlineKeyboardButton('🇵🇹', callback_data='sport3')
+sport_btn4 = InlineKeyboardButton('🇳🇱', callback_data='sport4')
+sport_btn5 = InlineKeyboardButton('🇧🇪', callback_data='sport5')
+sport_btn6 = InlineKeyboardButton('🇦🇹', callback_data='sport6')
+sport_btn7 = InlineKeyboardButton('🏴󠁧󠁢󠁳󠁣󠁴󠁿', callback_data='sport7')
+sport_btn8 = InlineKeyboardButton('🇺🇦', callback_data='sport8')
+sport_btn9 = InlineKeyboardButton('🏴󠁧󠁢󠁥󠁮󠁧󠁿', callback_data='sport9')
+sport_btn10 = InlineKeyboardButton('🇪🇸', callback_data='sport10')
+sport_btn11 = InlineKeyboardButton('🇷🇺', callback_data='sport11')
+sport_btn12 = InlineKeyboardButton('🇮🇹', callback_data='sport12')
+sport_keyboard = InlineKeyboardMarkup().add(sport_btn1, sport_btn2, sport_btn3, sport_btn4, sport_btn5, sport_btn6,
+                                            sport_btn7,
+                                            sport_btn8, sport_btn9, sport_btn10, sport_btn11, sport_btn12)
 
 
 # колбек функции кнопок с последующим выводом на экран текста
@@ -147,6 +167,14 @@ async def answer_weather(message: types.Message, state: FSMContext):
     else:
         await unknown_message(message)
     await state.finish()
+
+
+@dp.message_handler(commands=['football'], state=None)
+async def sport_news(message: types.Message):
+    await bot.send_message(message.chat.id,
+                           "Здесь новости про мировой футбол , нажмите на лигу, новости которой хотите прочитать",
+                           reply_markup=sport_keyboard)
+    await message.answer(football_news.get_news(12))
 
 
 # функция для непонятного текста
